@@ -52,6 +52,12 @@
             color: #198754;
             font-weight: bold;
         }
+
+        .error {
+            color: red;
+            font-size: 14px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -62,6 +68,7 @@
         <div class="mb-3">
             <label for="RPU" class="form-label fw-bold text-primary">Rate per Unit</label>
             <input type="number" id="RPU" class="form-control rate" min="0" step="0.01">
+            <span id="rateError" class="error"></span>
         </div>
 
         <div class="table-responsive">
@@ -76,8 +83,14 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td><input type="number" class="form-control prevUnit" min="0"></td>
-                        <td><input type="number" class="form-control currUnit" min="0"></td>
+                        <td>
+                            <input type="number" class="form-control prevUnit" min="0">
+                            <span class="error prevError"></span>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control currUnit" min="0">
+                            <span class="error currError"></span>
+                        </td>
                         <td class="amount">0</td>
                         <td><button class="btn btn-danger removeRow">Remove</button></td>
                     </tr>
@@ -93,22 +106,62 @@
         $(document).ready(function () {
             function calculateAmounts() {
                 let total = 0;
+                let rate = parseFloat($("#RPU").val()) || 0;
+
+                if (rate <= 0) {
+                    $("#rateError").text("Rate per Unit must be greater than 0.");
+                    return;
+                } else {
+                    $("#rateError").text("");
+                }
+
                 $("#billTable tbody tr").each(function () {
                     let prevUnit = parseFloat($(this).find(".prevUnit").val()) || 0;
                     let currUnit = parseFloat($(this).find(".currUnit").val()) || 0;
-                    let rate = parseFloat($("#RPU").val()) || 0;
+
+                    // Validation for Previous & Current Unit
+                    let prevError = $(this).find(".prevError");
+                    let currError = $(this).find(".currError");
+
+                    if (prevUnit < 0) {
+                        prevError.text("Previous unit cannot be negative.");
+                        return;
+                    } else {
+                        prevError.text("");
+                    }
+
+                    if (currUnit < prevUnit) {
+                        currError.text("Current unit must be greater than Previous unit.");
+                        return;
+                    } else {
+                        currError.text("");
+                    }
+
                     let amount = (currUnit - prevUnit) * rate;
                     if (amount < 0) amount = 0;
                     $(this).find(".amount").text(amount.toFixed(2));
                     total += amount;
                 });
+
                 $("#totalAmount").text(total.toFixed(2));
             }
 
             $("#addRow").click(function () {
+                let rate = parseFloat($("#RPU").val()) || 0;
+                if (rate <= 0) {
+                    $("#rateError").text("Please enter a valid Rate per Unit before adding rows.");
+                    return;
+                }
+
                 let row = `<tr>
-                    <td><input type="number" class="form-control prevUnit" min="0"></td>
-                    <td><input type="number" class="form-control currUnit" min="0"></td>
+                    <td>
+                        <input type="number" class="form-control prevUnit" min="0">
+                        <span class="error prevError"></span>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control currUnit" min="0">
+                        <span class="error currError"></span>
+                    </td>
                     <td class="amount">0</td>
                     <td><button class="btn btn-danger removeRow">Remove</button></td>
                 </tr>`;
