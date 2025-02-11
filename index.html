@@ -58,6 +58,13 @@
             font-size: 14px;
             font-weight: bold;
         }
+
+         /* Input Styling */
+         .form-control {
+            border: 2px solid #0d6efd;
+            border-radius: 5px;
+            padding: 5px;
+        }
     </style>
 </head>
 
@@ -75,6 +82,7 @@
             <table class="table table-bordered" id="billTable">
                 <thead class="table-primary">
                     <tr>
+                        <th>Tenant Name</th>
                         <th>Previous Unit</th>
                         <th>Current Unit</th>
                         <th>Amount</th>
@@ -83,6 +91,9 @@
                 </thead>
                 <tbody>
                     <tr>
+                        <td>
+                            <input type="text" class="form-control" min="0">                            
+                        </td>
                         <td>
                             <input type="number" class="form-control prevUnit" min="0">
                             <span class="error prevError"></span>
@@ -164,6 +175,9 @@
                 }
 
                 let row = `<tr>
+                    <td>
+                        <input type="text" class="form-control" min="0">                            
+                    </td>
                     <td>
                         <input type="number" class="form-control prevUnit" min="0">
                         <span class="error prevError"></span>
