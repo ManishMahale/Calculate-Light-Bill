@@ -55,51 +55,8 @@
 
         .error {
             color: red;
-            font-size: 12px;
-        }
-
-        .border-danger {
-            border: 2px solid red !important;
-        }
-
-        .border-success {
-            border: 2px solid green !important;
-        }
-
-        /* Style the table rows for better visibility */
-        tbody tr:nth-child(odd) {
-            background: #f1f8ff;
-        }
-
-        tbody tr:nth-child(even) {
-            background: #e6f2ff;
-        }
-
-        /* Style input fields */
-        input[type="number"] {
-            background: #ffffff;
-            padding: 8px;
-            font-size: 16px;
-        }
-
-        /* Ensure mobile-friendly design */
-        @media (max-width: 600px) {
-            .container {
-                max-width: 100%;
-                padding: 15px;
-            }
-
-            table {
-                font-size: 14px;
-            }
-
-            input[type="number"] {
-                font-size: 14px;
-            }
-
-            .btn {
-                font-size: 14px;
-            }
+            font-size: 14px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -110,7 +67,7 @@
 
         <div class="mb-3">
             <label for="RPU" class="form-label fw-bold text-primary">Rate per Unit</label>
-            <input type="number" id="RPU" class="form-control rate RPU" min="0" step="0.01">
+            <input type="number" id="RPU" class="form-control rate" min="0" step="0.01">
             <span id="rateError" class="error"></span>
         </div>
 
@@ -147,59 +104,55 @@
 
     <script>
         $(document).ready(function () {
-            function calculateTotal() {
+            function calculateAmounts() {
                 let total = 0;
-                $(".amount").each(function () {
-                    total += parseFloat($(this).text()) || 0;
-                });
-                $("#totalAmount").text(total.toFixed(2));
-            }
-
-            function validateAndCalculate(row) {
-                let prevUnit = parseFloat(row.find(".prevUnit").val()) || 0;
-                let currUnit = parseFloat(row.find(".currUnit").val()) || 0;
                 let rate = parseFloat($("#RPU").val()) || 0;
 
-                let prevError = row.find(".prevError");
-                let currError = row.find(".currError");
-
-                // Validate Previous Unit
-                if (prevUnit < 0) {
-                    prevError.text("Previous unit cannot be negative.");
-                    row.find(".prevUnit").addClass("border-danger").removeClass("border-success");
-                } else {
-                    prevError.text("");
-                    row.find(".prevUnit").addClass("border-success").removeClass("border-danger");
-                }
-
-                // Validate Current Unit
-                if (currUnit < prevUnit) {
-                    currError.text("Current unit must be greater than Previous unit.");
-                    row.find(".currUnit").addClass("border-danger").removeClass("border-success");
-                } else {
-                    currError.text("");
-                    row.find(".currUnit").addClass("border-success").removeClass("border-danger");
-                }
-
-                // Validate Rate Per Unit
                 if (rate <= 0) {
-                    $("#RPU").addClass("border-danger").removeClass("border-success");
                     $("#rateError").text("Rate per Unit must be greater than 0.");
                     return;
                 } else {
-                    $("#RPU").addClass("border-success").removeClass("border-danger");
                     $("#rateError").text("");
                 }
 
-                // Calculate Amount
-                let amount = (currUnit - prevUnit) * rate;
-                if (amount < 0) amount = 0;
-                row.find(".amount").text(amount.toFixed(2));
+                $("#billTable tbody tr").each(function () {
+                    let prevUnit = parseFloat($(this).find(".prevUnit").val()) || 0;
+                    let currUnit = parseFloat($(this).find(".currUnit").val()) || 0;
 
-                calculateTotal();
+                    // Validation for Previous & Current Unit
+                    let prevError = $(this).find(".prevError");
+                    let currError = $(this).find(".currError");
+
+                    if (prevUnit < 0) {
+                        prevError.text("Previous unit cannot be negative.");
+                        return;
+                    } else {
+                        prevError.text("");
+                    }
+
+                    if (currUnit < prevUnit) {
+                        currError.text("Current unit must be greater than Previous unit.");
+                        return;
+                    } else {
+                        currError.text("");
+                    }
+
+                    let amount = (currUnit - prevUnit) * rate;
+                    if (amount < 0) amount = 0;
+                    $(this).find(".amount").text(amount.toFixed(2));
+                    total += amount;
+                });
+
+                $("#totalAmount").text(total.toFixed(2));
             }
 
             $("#addRow").click(function () {
+                let rate = parseFloat($("#RPU").val()) || 0;
+                if (rate <= 0) {
+                    $("#rateError").text("Please enter a valid Rate per Unit before adding rows.");
+                    return;
+                }
+
                 let row = `<tr>
                     <td>
                         <input type="number" class="form-control prevUnit" min="0">
@@ -216,13 +169,12 @@
             });
 
             $(document).on("input", ".prevUnit, .currUnit, #RPU", function () {
-                let row = $(this).closest("tr");
-                validateAndCalculate(row);
+                calculateAmounts();
             });
 
             $(document).on("click", ".removeRow", function () {
                 $(this).closest("tr").remove();
-                calculateTotal();
+                calculateAmounts();
             });
         });
     </script>
